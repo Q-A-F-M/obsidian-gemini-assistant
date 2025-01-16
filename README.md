@@ -1,0 +1,1 @@
+# obsidian-gemini-assistant
