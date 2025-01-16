@@ -1,8 +1,35 @@
+// Configuration
+const GOOGLE_API_KEY = 'AIzaSyBCj9JQWmNv2IbCy3uK-Qh1xYMu9SHOWv8'; // We'll replace this with secure loading later
+
 // Main App Component
 const App = () => {
     const [messages, setMessages] = React.useState([]);
     const [input, setInput] = React.useState('');
     const [isProcessing, setIsProcessing] = React.useState(false);
+
+    const callGeminiAPI = async (prompt) => {
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GOOGLE_API_KEY}`
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('API request failed');
+        }
+
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -14,15 +41,19 @@ const App = () => {
         setInput('');
 
         try {
-            // For now, we'll use a placeholder response
-            // We'll add actual API integration later
+            const response = await callGeminiAPI(input);
             const assistantMessage = {
                 role: 'assistant',
-                content: 'This is a test response. API integration coming soon!'
+                content: response
             };
             setMessages(prev => [...prev, assistantMessage]);
         } catch (error) {
             console.error('Error:', error);
+            const errorMessage = {
+                role: 'assistant',
+                content: 'Sorry, I encountered an error. Please try again.'
+            };
+            setMessages(prev => [...prev, errorMessage]);
         } finally {
             setIsProcessing(false);
         }
