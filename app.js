@@ -1,18 +1,32 @@
-// Configuration
-const GOOGLE_API_KEY = 'AIzaSyBCj9JQWmNv2IbCy3uK-Qh1xYMu9SHOWv8'; // We'll replace this with secure loading later
-
 // Main App Component
 const App = () => {
     const [messages, setMessages] = React.useState([]);
     const [input, setInput] = React.useState('');
     const [isProcessing, setIsProcessing] = React.useState(false);
+    const [apiKey, setApiKey] = React.useState('');
+    const [isConfigured, setIsConfigured] = React.useState(false);
+
+    const setupApiKey = (key) => {
+        setApiKey(key);
+        setIsConfigured(true);
+        // Store in session storage (cleared when browser closes)
+        sessionStorage.setItem('gemini_key', key);
+    };
+
+    // Check for stored API key on load
+    React.useEffect(() => {
+        const storedKey = sessionStorage.getItem('gemini_key');
+        if (storedKey) {
+            setupApiKey(storedKey);
+        }
+    }, []);
 
     const callGeminiAPI = async (prompt) => {
         const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GOOGLE_API_KEY}`
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
                 contents: [{
@@ -58,6 +72,35 @@ const App = () => {
             setIsProcessing(false);
         }
     };
+
+    if (!isConfigured) {
+        return (
+            <div className="container mx-auto p-4 h-full flex items-center justify-center">
+                <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+                    <h2 className="text-xl font-bold mb-4">Setup Required</h2>
+                    <p className="mb-4">Please enter your Google API key to continue:</p>
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const key = e.target.apiKey.value;
+                        if (key) setupApiKey(key);
+                    }}>
+                        <input
+                            type="password"
+                            name="apiKey"
+                            className="w-full p-2 border rounded mb-4"
+                            placeholder="Enter your API key"
+                        />
+                        <button
+                            type="submit"
+                            className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                            Save API Key
+                        </button>
+                    </form>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto p-4 h-full">
