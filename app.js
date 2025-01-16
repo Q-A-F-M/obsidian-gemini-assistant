@@ -15,11 +15,10 @@ const App = () => {
 
         try {
             console.log('Making API request...'); // Debug log
-            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     contents: [{
@@ -29,6 +28,14 @@ const App = () => {
                     }]
                 })
             });
+
+            console.log('Response status:', response.status); // Debug log
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('API Error Response:', errorData);
+                throw new Error(errorData.error?.message || 'API request failed');
+            }
 
             const data = await response.json();
             console.log('API response:', data); // Debug log
@@ -40,19 +47,9 @@ const App = () => {
             setMessages(prev => [...prev, assistantMessage]);
         } catch (error) {
             console.error('Error details:', error);
-            let errorContent = 'An error occurred';
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('API Error Response:', errorData);
-                errorContent = `API Error: ${errorData.error?.message || 'Unknown error'}`;
-            } else {
-                errorContent = `Error: ${error.message}`;
-            }
-            
             const errorMessage = {
                 role: 'assistant',
-                content: errorContent
+                content: `Error: ${error.message}`
             };
             setMessages(prev => [...prev, errorMessage]);
         } finally {
