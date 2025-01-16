@@ -1,4 +1,5 @@
-// Main App Component
+'use strict';
+
 const App = () => {
     const [messages, setMessages] = React.useState([]);
     const [input, setInput] = React.useState('');
@@ -14,7 +15,6 @@ const App = () => {
         setMessages(prev => [...prev, userMessage]);
 
         try {
-            console.log('Making API request...'); // Debug log
             const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: {
@@ -29,8 +29,6 @@ const App = () => {
                 })
             });
 
-            console.log('Response status:', response.status); // Debug log
-
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('API Error Response:', errorData);
@@ -38,8 +36,6 @@ const App = () => {
             }
 
             const data = await response.json();
-            console.log('API response:', data); // Debug log
-
             const assistantMessage = {
                 role: 'assistant',
                 content: data.candidates[0].content.parts[0].text
@@ -58,23 +54,7 @@ const App = () => {
         }
     };
 
-    if (!apiKey) {
-        return (
-            <div className="container mx-auto p-4">
-                <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-                    <h2 className="text-xl font-bold mb-4">Enter API Key</h2>
-                    <input
-                        type="password"
-                        className="w-full p-2 border rounded mb-4"
-                        placeholder="Paste your API key here"
-                        onChange={(e) => setApiKey(e.target.value)}
-                    />
-                </div>
-            </div>
-        );
-    }
-
-    return (
+    const appContent = apiKey ? (
         <div className="container mx-auto p-4">
             <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md">
                 <div className="p-4 space-y-4">
@@ -119,8 +99,22 @@ const App = () => {
                 </div>
             </div>
         </div>
+    ) : (
+        <div className="container mx-auto p-4">
+            <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-bold mb-4">Enter API Key</h2>
+                <input
+                    type="password"
+                    className="w-full p-2 border rounded mb-4"
+                    placeholder="Paste your API key here"
+                    onChange={(e) => setApiKey(e.target.value)}
+                />
+            </div>
+        </div>
     );
+
+    return appContent;
 };
 
-// Render the app
-ReactDOM.render(<App />, document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
